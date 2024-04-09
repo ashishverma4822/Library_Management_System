@@ -6,8 +6,11 @@ from typing import List, Optional
 
 app = FastAPI()
 
-# Connect to MongoDB
-client = MongoClient("mongodb+srv://vashishk0602:oBcmz2IR09JRbwBx@cluster0.kq7qpvw.mongodb.net/")
+
+try:
+    client = MongoClient("mongodb+srv://vashishk0602:oBcmz2IR09JRbwBx@cluster0.kq7qpvw.mongodb.net/")
+except Exception as e:
+    raise HTTPException(status_code=500, detail=f"Error connecting to MongoDB: {str(e)}")
 db = client.get_database("library")
 students_collection = db.get_collection("students")
 
@@ -53,11 +56,8 @@ async def list_students(country: Optional[str] = None, age: Optional[int] = None
             query["address.country"] = country
         if age:
             query["age"] = {"$gte": age}
-        students = list(students_collection.find(query))
-        student_objects = []
-        for student in students:
-            student["id"] = str(student["_id"]) 
-            student_objects.append(StudentOut(**student))
+        students = students_collection.find(query)
+        student_objects = [StudentOut(**student) for student in students]  # List comprehension
         return student_objects
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -90,6 +90,7 @@ async def update_student(id: str, student: Student):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
+
 @app.delete("/students/{id}")
 async def delete_student(id: str):
     try:
@@ -100,4 +101,5 @@ async def delete_student(id: str):
             raise HTTPException(status_code=404, detail="Student not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 
