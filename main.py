@@ -31,17 +31,13 @@ async def read_root():
     return {"Welcome to the Library Management API"}
 
 # API Endpoints
-@app.patch("/students/{id}")
-async def update_student(id: str, student: Student):
+app.post("/students", response_model=StudentOut, status_code=201)
+async def create_student(student: Student):
     try:
-        student_data = student.dict()  # Removed exclude_unset=True
-        if not student_data:
-            raise HTTPException(status_code=400, detail="No data provided")
-        result = students_collection.update_one({"_id": ObjectId(id)}, {"$set": student_data})
-        if result.modified_count == 1:
-            return {"message": "Student updated successfully"}
-        else:
-            raise HTTPException(status_code=404, detail="Student not found")
+        student_data = student.dict()
+        result = students_collection.insert_one(student_data)
+        student_data["id"] = str(result.inserted_id)
+        return StudentOut(**student_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
@@ -76,7 +72,7 @@ async def fetch_student(id: str):
 @app.patch("/students/{id}")
 async def update_student(id: str, student: Student):
     try:
-        student_data = student.dict(exclude_unset=True)
+        student_data = student.dict()  # Removed exclude_unset=True
         if not student_data:
             raise HTTPException(status_code=400, detail="No data provided")
         result = students_collection.update_one({"_id": ObjectId(id)}, {"$set": student_data})
