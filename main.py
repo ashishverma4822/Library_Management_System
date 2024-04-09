@@ -79,13 +79,14 @@ async def fetch_student(id: str):
 async def update_student(id: str, student: Student):
     try:
         student_data = student.dict(exclude_unset=True)
-        if not student_data:
-            raise HTTPException(status_code=400, detail="No data provided")
-        result = students_collection.update_one({"_id": ObjectId(id)}, {"$set": student_data})
-        if result.modified_count == 1:
-            return {"message": "Student updated successfully"}
+        if student_data:
+            result = students_collection.update_one({"_id": ObjectId(id)}, {"$set": student_data})
+            if result.modified_count == 1:
+                return {"message": "Student updated successfully"}
+            else:
+                raise HTTPException(status_code=404, detail="Student not found")
         else:
-            raise HTTPException(status_code=404, detail="Student not found")
+            raise HTTPException(status_code=400, detail="No data provided")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
