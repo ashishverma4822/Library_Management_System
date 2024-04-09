@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pymongo import MongoClient
 from bson import ObjectId
@@ -22,10 +22,14 @@ class Student(BaseModel):
     address: Address
 
 class StudentOut(Student):
-    _id: str
-    
+    _id: Optional[str]
 
-#Root endpoint
+
+@app.get("/favicon.ico")
+async def get_favicon():
+    raise HTTPException(status_code=404)
+
+# Root endpoint
 @app.get("/")
 async def read_root():
     return {"Welcome to the Library Management API"}
@@ -36,12 +40,10 @@ async def create_student(student: Student):
     try:
         student_data = student.dict()
         result = students_collection.insert_one(student_data)
-        inserted_id = str(result.inserted_id)
-        student_data["_id"] = inserted_id  # Use "_id" instead of "id"
+        student_data["_id"] = str(result.inserted_id)
         return StudentOut(**student_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-
 
 @app.get("/students", response_model=List[StudentOut])
 async def list_students(country: Optional[str] = None, age: Optional[int] = None):
@@ -52,7 +54,10 @@ async def list_students(country: Optional[str] = None, age: Optional[int] = None
         if age:
             query["age"] = {"$gte": age}
         students = list(students_collection.find(query))
-        student_objects = [StudentOut(**student) for student in students]
+        student_objects = []
+        for student in students:
+            student["id"] = str(student["_id"]) 
+            student_objects.append(StudentOut(**student))
         return student_objects
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -63,8 +68,8 @@ async def fetch_student(id: str):
     try:
         student = students_collection.find_one({"_id": ObjectId(id)})
         if student:
-            student["id"] = str(student.pop("_id"))
-            return student
+            student['_id'] = str(student['_id'])
+            return StudentOut(**student)
         else:
             raise HTTPException(status_code=404, detail="Student not found")
     except Exception as e:
@@ -73,7 +78,7 @@ async def fetch_student(id: str):
 @app.patch("/students/{id}")
 async def update_student(id: str, student: Student):
     try:
-        student_data = student.dict()  # Removed exclude_unset=True
+        student_data = student.dict(exclude_unset=True)
         if not student_data:
             raise HTTPException(status_code=400, detail="No data provided")
         result = students_collection.update_one({"_id": ObjectId(id)}, {"$set": student_data})
@@ -94,3 +99,4 @@ async def delete_student(id: str):
             raise HTTPException(status_code=404, detail="Student not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
