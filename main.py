@@ -8,7 +8,7 @@ app = FastAPI()
 
 
 try:
-    client = MongoClient("mongodb+srv://vashishk0602:oBcmz2IR09JRbwBx@cluster0.kq7qpvw.mongodb.net/")
+    client = MongoClient("mongodb+srv://vashishk0602:jaCDL3NLjQ8K9vXy@cluster0.mtt1isj.mongodb.net/")
 except Exception as e:
     raise HTTPException(status_code=500, detail=f"Error connecting to MongoDB: {str(e)}")
 db = client.get_database("library")
