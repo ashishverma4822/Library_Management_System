@@ -1,0 +1,24 @@
+Root :-> https://13.48.195.49/
+POST :-> using Postman
+      https://13.48.195.49/students
+      example:--> json
+          {
+              "name": "Aashish",
+              "age": 21,
+              "address": {
+                "city": "Kanpur",
+                "country": "India"
+              }
+          }
+
+GET :-> https://13.48.195.49/students
+GET with params :-> examples :->
+                https://13.48.195.49/students/?country=India&age=20
+
+Patch :-> 
+      https://13.48.195.49/students/<_id>
+      update _id data with new provided json
+Delete :->
+      https://13.48.195.49/students/<_id>
+
+<_id> :-> this is id provided by mongodb 
