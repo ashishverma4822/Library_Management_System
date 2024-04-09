@@ -31,12 +31,13 @@ async def read_root():
     return {"Welcome to the Library Management API"}
 
 # API Endpoints
-app.post("/students", response_model=StudentOut, status_code=201)
+@app.post("/students", response_model=StudentOut, status_code=201)
 async def create_student(student: Student):
     try:
         student_data = student.dict()
         result = students_collection.insert_one(student_data)
-        student_data["id"] = str(result.inserted_id)
+        inserted_id = str(result.inserted_id)
+        student_data["_id"] = inserted_id  # Use "_id" instead of "id"
         return StudentOut(**student_data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
